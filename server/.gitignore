@@ -1,0 +1,8 @@
+# 依赖
+node_modules/
+
+# 编译后的项目
+build/
+
+# Debugger for Chrome 插件临时文件
+.vscode/

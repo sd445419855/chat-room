@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="CN">
+  <head>
+    <meta charset="UTF-8">
+    <title>新消息</title>
+    <style>
+      .messageBoard {
+        height: 200px;
+        /* width: 600px; */
+        overflow-y: scroll;
+        border: 2px burlywood solid;
+        margin: 0px 0px 20px 0px;
+      }
+      .messageInput {
+        margin: 0px 0px 10px 0px;
+      }
+    </style>
+  </head>
+    
+  <body>
+    聊天室
+    <div class="messageBoard">
+      <ul id="messageList">
+        <li>A 说：ysf 牛逼！</li>
+        <li>B 说：ysf 强悍！</li>
+        <li>C 说：ysf 暖男！</li>
+      </ul>
+    </div>
+    <div class="messageInput">
+      输入消息 <input type="text" id="inputMessage"/>  <input type="button" value="发送消息" onclick="handleSendMessage()"/>
+
+    </div>
+    <div class="nickName">
+      修改昵称 <input type="text" id="inputNickName"/> <input type="button" value="确认修改" onclick="handleModifyNickName()"/>
+    </div>
+
+    <script type="text/javascript">
+      function handleSendMessage(){
+        let inputMessageElement = document.getElementById("inputMessage"); 
+        // send message to server                 // send() 的数据只能是字符串或二进制数据
+        webSocketClient.send(JSON.stringify({
+            type: 'sendChatMessage',
+            // nickname: 'Kai',
+            message: inputMessageElement.value
+        }));
+        inputMessageElement.value = "";
+      }
+
+      function handleModifyNickName(){
+        let inputNickNameElement = document.getElementById("inputNickName");  
+        // send message to server
+        webSocketClient.send(JSON.stringify({
+            type: 'modifyNickname',
+            // nickname: 'Kai',
+            message: inputNickNameElement.value
+        })); 
+        inputNickNameElement.value = "";
+      }
+
+      // WebSocket
+      let webSocketClient = new WebSocket('ws://www.lovewanwan.life:3333');      // ws://139.196.42.209:8011      ws://127.0.0.1:3000
+      webSocketClient.onopen = function(event){                       // Q：为什么这个
+        window.alert("WebSocket connected succesfully!!");
+        console.info("open event: ", event);
+        console.info("event.data: ", event.data);
+        console.info("event.message: ", event.message);
+      };
+
+      webSocketClient.onerror = function(event){
+        window.alert("WebSocket connected unsuccesfully!! Error info: " + event);
+        console.info("error event: ", event);
+        console.info("event.data: ", event.data);
+        console.info("event.message: ", event.message);
+      };;
+
+      // Listen for messages event -- method 1
+      webSocketClient.onmessage = function(event){
+        console.info("message event: ", event);
+        console.info("event.data: ", event.data);
+        console.info("event.message: ", event.message);
+        let serverMessage = JSON.parse(event.data);
+        console.info("serverMessage (event.data json edition): ", serverMessage);
+        // 排除服务器推送的垃圾消息
+        if(serverMessage.type != "message" && serverMessage.type != "nick_update" && serverMessage.type != "notification") return;      
+        
+        let inputMessageElement = document.getElementById("inputMessage");
+        let messageList = document.getElementById("messageList");
+        let inputNickNameElement = document.getElementById("inputNickName");
+        let _li = document.createElement("li");
+        // _li.innerText = "<span>child1</span>";
+        // _li.innerHTML = "<span>child2</span>";
+        if(serverMessage.type == "nick_update" || serverMessage.type == "notification"){
+          _li.innerHTML = "<span>" + "系统公告：" + serverMessage.message + "</span>";
+        } else {
+          _li.innerHTML = "<span>" + serverMessage.nickname + " 说：" + serverMessage.message + "</span>";
+        }        
+        messageList.appendChild(_li);
+      };;
+
+      // Listen for messages event -- method 2
+      // webSocketClient.addEventListener('message', function (event) {    // 所谓 listener，就是事件要绑定的执行函数。
+      //   console.info("message event: ", event);
+      //   console.info("event.data: ", event.data);
+      //   console.info("event.message: ", event.message);
+      // });
+
+      webSocketClient.onclose = function(event){
+        window.alert("WebSocket connection is closed!!");
+        console.info("close event: ", event);
+      };;
+
+
+
+    </script>
+  </body>    
+</html>
